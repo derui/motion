@@ -1,0 +1,4 @@
+.task/
+
+# ignore compiled elisp
+*.elc

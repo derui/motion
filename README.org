@@ -1,0 +1,32 @@
+* An simple vim-like motion library
+This package provides a function set to define and use motion that is like vim's it.
+
+- No any third package requires
+- Framework-agnostic
+- Very simple
+
+
+* Install
+This package do not publish any other package registries. Please install via package manager that supports installing package from version control system such as git.
+
+#+begin_src emacs-lisp
+  ;; For elpaca user
+  (elpaca (motion :type git :host github :repo "derui/motion"))
+#+end_src
+
+* Terminology
+Some words that are used in this package defines.
+
+| word   | mean                                                   |
+|--------+--------------------------------------------------------|
+| prefix | Prefix of motion. This type of motion holds state only |
+| action | Action to run after motion finished                    |
+
+
+* Usage
+No any default motion implementation provides from this package. User *must* define motion as you like.
+
+** Define motion
+
+** Use motion
+
