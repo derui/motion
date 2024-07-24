@@ -48,9 +48,10 @@ inner/outer function to get inner/outer region around something.
 
 "
   (declare (indent 0))
-  (let ((arounder (plist-get arguments :around)))
+  (let ((arounder (plist-get arguments :around))
+        (fname (symbol-name name)))
     `(progn
-       (defun ,(intern (symbol-name name)) (operator &rest args)
+       (defun ,(intern fname) (operator &rest args)
          ,docstring
          (save-excursion
            (let ((motion--mode (or (plist-get args :mode)
@@ -60,13 +61,13 @@ inner/outer function to get inner/outer region around something.
                )))
          )
        ,(when arounder
-          `(defun ,(intern (seq-concatenate 'string (symbol-name name) "-inner")) (operator)
+          `(defun ,(intern (seq-concatenate 'string fname "-inner")) (operator)
              ,docstring
-             (,(intern (symbol-name name)) operator :mode 'inner)))
+             (,(intern fname) operator :mode 'inner)))
        ,(when arounder
-          `(defun ,(intern (seq-concatenate 'string (symbol-name name) "-outer")) (operator)
+          `(defun ,(intern (seq-concatenate 'string fname "-outer")) (operator)
              ,docstring
-             (,(intern (symbol-name name)) operator :mode 'outer)))
+             (,(intern fname) operator :mode 'outer)))
        ))
   )
 
