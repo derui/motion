@@ -48,16 +48,9 @@
                  "test"
                  (cond
                   (motion--mode
-                   (save-mark-and-excursion
-                     (let (s e)
-                       (setq s (progn
-                                 (backward-word)
-                                 (point)))
-                       (setq e (progn
-                                 (forward-word)
-                                 (point)))
-                       (list s e))
-                     ))
+                   (let ((thing (bounds-of-thing-at-point 'word)))
+                     (and thing
+                          (list (car thing) (cdr thing)))))
                   (t
                    (let ((s (point)))
                      (forward-word)
@@ -77,6 +70,21 @@
     (motion-test1-outer (lambda (s e)
                           (should (= 1 s))
                           (should (= 4 e))))
+    ))
+
+(ert-deftest do-not-apply-operator-if-motion-return-nil ()
+  (motion-define motion-test1 (:around t)
+                 "test"
+                 nil
+                 )
+  (with-temp-buffer
+    (insert "foo bar baz")
+    (goto-char 2)
+
+    (let (called)
+      (motion-test1 (lambda (s e)
+                      (setq called t)))
+      (should (equal called nil)))
     ))
 
 (ert t)

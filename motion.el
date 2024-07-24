@@ -33,22 +33,19 @@
 ;;: Customization:
 
 ;;; Code:
-(require 'text-property-search)
-
 (defgroup motion nil
   "motion customization group"
   :prefix "motion-")
 
-;; global variable
+;;;###autoload
 (defmacro motion-define (name arguments docstring &rest body)
   "Define motion wity definition.
 
 `arguments' holds some parameter list. Give `:around' with t to define
 inner/outer function to get inner/outer region around something.
-
 "
   (declare (indent 0))
-  (let ((arounder (plist-get arguments :around))
+  (let ((make-around-p (plist-get arguments :around))
         (fname (symbol-name name)))
     `(progn
        (defun ,(intern fname) (operator &rest args)
@@ -60,11 +57,11 @@ inner/outer function to get inner/outer region around something.
                (apply operator region)
                )))
          )
-       ,(when arounder
+       ,(when make-around-p
           `(defun ,(intern (seq-concatenate 'string fname "-inner")) (operator)
              ,docstring
              (,(intern fname) operator :mode 'inner)))
-       ,(when arounder
+       ,(when make-around-p
           `(defun ,(intern (seq-concatenate 'string fname "-outer")) (operator)
              ,docstring
              (,(intern fname) operator :mode 'outer)))
