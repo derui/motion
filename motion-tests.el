@@ -87,4 +87,21 @@
       (should (equal called nil)))
     ))
 
+(ert-deftest motion-for-thing ()
+  (motion-define-thing motion-thing `word)
+  (with-temp-buffer
+    (insert "foo bar baz")
+    (goto-char 2)
+
+    (motion-thing (lambda (s e)
+                    (should (= 2 s))
+                    (should (= 4 e))))
+    (motion-thing-inner (lambda (s e)
+                          (should (= 1 s))
+                          (should (= 4 e))))
+    (motion-thing-outer (lambda (s e)
+                          (should (= 1 s))
+                          (should (= 4 e))))
+    ))
+
 (ert t)

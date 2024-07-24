@@ -33,6 +33,7 @@
 ;;: Customization:
 
 ;;; Code:
+
 (defgroup motion nil
   "motion customization group"
   :prefix "motion-")
@@ -67,5 +68,24 @@ inner/outer function to get inner/outer region around something.
              (,(intern fname) operator :mode 'outer)))
        ))
   )
+
+;;;###autoload
+(defmacro motion-define-thing (name thing)
+  "Define motion for `THING'.
+
+This macro defines motion via `motion-define' with `NAME'.
+Use `THING' in defined motion, and do not define with `:around'
+property with `motion-define'.
+"
+  `(motion-define ,name (:around t) "Motion for `THING'"
+                  (let ((thing (bounds-of-thing-at-point ,thing)))
+                    (and thing
+                         (pcase motion--mode
+                           ((or 'inner 'outer)
+                            (list (car thing) (cdr thing))
+                            )
+                           (t
+                            (list (point) (cdr thing))))))
+                  ))
 
 (provide 'motion)
