@@ -47,15 +47,26 @@
 inner/outer function to get inner/outer region around something.
 
 "
-  (declare (indent 1))
+  (declare (indent 0))
   (let ((arounder (plist-get arguments :around)))
     `(progn
-       (defun ,(intern (symbol-name name)) (operator)
+       (defun ,(intern (symbol-name name)) (operator &rest args)
          ,docstring
-         (when-let ((region (progn ,@body)))
-           (apply operator region)
-           )
+         (save-excursion
+           (let ((motion--mode (or (plist-get args :mode)
+                                   nil)))
+             (when-let* ((region (progn ,@body)))
+               (apply operator region)
+               )))
          )
+       ,(when arounder
+          `(defun ,(intern (seq-concatenate 'string (symbol-name name) "-inner")) (operator)
+             ,docstring
+             (,(intern (symbol-name name)) operator :mode 'inner)))
+       ,(when arounder
+          `(defun ,(intern (seq-concatenate 'string (symbol-name name) "-outer")) (operator)
+             ,docstring
+             (,(intern (symbol-name name)) operator :mode 'outer)))
        ))
   )
 
