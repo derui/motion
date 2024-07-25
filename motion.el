@@ -16,19 +16,16 @@
 ;;
 ;; You can define new motion with `motion-define' macro.
 ;;
-;; (motion-define my:new-motion ()
-;;                "doc string for this motion"
-;;                (let* ((start (point)))
-;;                  (forward-word)
-;;                  (start (point))
-;;                  ))
+;; (motion-define my:new-motion
+;;   "motion of word"
+;;   :forward
+;;   (let* ((start (point)))
+;;     (forwardh-word)
+;;     (list start . (point))))
 ;;
-;; You can use `my:new-motion' as function to run operator with region
+;; You can use `my:new-motion-forward' as function to run operator with region
 ;; from current point to next word.
-;; Definition of motion by macro `motion-define' has some utility variable in macro.
 ;;
-;; * `motion--mode' mode of current motion if defined motion give `around' argument
-;;   `motion--mode' holds `inner' ,`outer' or nil.
 
 ;;: Customization:
 
@@ -39,33 +36,63 @@
   :prefix "motion-")
 
 ;;;###autoload
-(defmacro motion-define (name arguments docstring &rest body)
+(defmacro motion-define (name docstring &rest definitions)
   "Define motion wity definition.
 
-`arguments' holds some parameter list. Give `:around' with t to define
-inner/outer function to get inner/outer region around something.
+`definitions' as plist to define each motion.
+
+`:forward' defines motion of forward with `-forward' suffix.
+`:backward' defines motion of backward with `-backward' suffix.
+`:inner' defines motion for inner of around with `-around-inner' suffix.
+`:outer' defines motion for outer of around with `-around-outer' suffix.
+
+All of functions that are defined in `definitions' exports global
+with `NAME' prefix.
+All definitions in `definitions' MUST returns cons (start . end) or nil.
+If nil returns from a definition, do not apply operator that pass by
+generated function.
 "
-  (declare (indent 0))
-  (let ((make-around-p (plist-get arguments :around))
+  (declare (indent 2))
+  (let ((inner-body (plist-get definitions :inner))
+        (outer-body (plist-get definitions :outer))
+        (forward-body (plist-get definitions :forward))
+        (backward-body (plist-get definitions :backward))
         (fname (symbol-name name)))
     `(progn
-       (defun ,(intern fname) (operator &rest args)
-         ,docstring
-         (save-excursion
-           (let ((motion--mode (or (plist-get args :mode)
-                                   nil)))
-             (when-let* ((region (progn ,@body)))
-               (apply operator region)
-               )))
-         )
-       ,(when make-around-p
-          `(defun ,(intern (seq-concatenate 'string fname "-inner")) (operator)
+       ,(when forward-body
+          `(defun ,(intern (seq-concatenate 'string fname "-forward")) (operator &rest args)
              ,docstring
-             (,(intern fname) operator :mode 'inner)))
-       ,(when make-around-p
-          `(defun ,(intern (seq-concatenate 'string fname "-outer")) (operator)
+             (save-excursion
+               (when-let* ((region ,forward-body))
+                 (funcall operator (car region) (cdr region))
+                 ))
+             )
+          )
+       ,(when backward-body
+          `(defun ,(intern (seq-concatenate 'string fname "-backward")) (operator &rest args)
              ,docstring
-             (,(intern fname) operator :mode 'outer)))
+             (save-excursion
+               (when-let* ((region ,backward-body))
+                 (funcall operator (car region) (cdr region))
+                 ))
+             )
+          )
+       ,(when inner-body
+          `(defun ,(intern (seq-concatenate 'string fname "-around-inner")) (operator &rest args)
+             ,docstring
+             (save-excursion
+               (when-let* ((region ,inner-body))
+                 (funcall operator (car region) (cdr region))
+                 ))
+             ))
+       ,(when outer-body
+          `(defun ,(intern (seq-concatenate 'string fname "-around-outer")) (operator &rest args)
+             ,docstring
+             (save-excursion
+               (when-let* ((region ,outer-body))
+                 (funcall operator (car region) (cdr region))
+                 ))
+             ))
        ))
   )
 
@@ -74,18 +101,21 @@ inner/outer function to get inner/outer region around something.
   "Define motion for `THING'.
 
 This macro defines motion via `motion-define' with `NAME'.
-Use `THING' in defined motion, and do not define with `:around'
-property with `motion-define'.
+Use `THING' in defined motion.
 "
-  `(motion-define ,name (:around t) "Motion for `THING'"
-                  (let ((thing (bounds-of-thing-at-point ,thing)))
-                    (and thing
-                         (pcase motion--mode
-                           ((or 'inner 'outer)
-                            (list (car thing) (cdr thing))
-                            )
-                           (t
-                            (list (point) (cdr thing))))))
-                  ))
+  `(motion-define ,name "Motion for `THING'"
+     :inner
+     (let ((thing (bounds-of-thing-at-point ,thing)))
+       (cons (car thing) (cdr thing)))
+     :outer
+     (let ((thing (bounds-of-thing-at-point ,thing)))
+       (cons (car thing) (cdr thing)))
+     :forward
+     (let ((thing (bounds-of-thing-at-point ,thing)))
+       (cons (point) (cdr thing)))
+     :backward
+     (let ((thing (bounds-of-thing-at-point ,thing)))
+       (cons (car thing) (point)))
+     ))
 
 (provide 'motion)

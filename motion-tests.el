@@ -20,88 +20,99 @@
 
 (ert-deftest define-simple-motion ()
   "define simplest motion"
-  (motion-define motion-test1 ()
-                 "test" '(1 3))
-  (let* ((ret (motion-test1 (lambda (s e)
-                              (should (= 1 s))
-                              (should (= 3 e))
-                              (+ s e))
-                            )))
-    (should (= ret 4))))
+  (motion-define motion-test1
+      "test"
+    :forward
+    '(1 . 3))
+  (let* ((ret (motion-test1-forward (lambda (s e)
+                                      (should (= 1 s))
+                                      (should (= 3 e))
+                                      (+ s e))
+                                    )))
+    (should (= ret 4)))
+  (should (not (fboundp 'motion-test1-backward)))
+  (should (not (fboundp 'motion-test1-inner)))
+  (should (not (fboundp 'motion-test1-outer)))
+  )
 
 (ert-deftest save-excursion-on-motion ()
-  (motion-define motion-test1 ()
-                 "test"
-                 (forward-char 2)
-                 (list (point) (+ (point) 3)))
+  (motion-define motion-test1
+      "test"
+    :forward
+    (progn 
+      (forward-char 2)
+      (cons (point) (+ (point) 3))))
   (with-temp-buffer
     (insert "foobarbaz")
     (goto-char (point-min))
 
-    (motion-test1 (lambda (s e)
-                    (should (= 3 s))
-                    (should (= 6 e))))
+    (motion-test1-forward (lambda (s e)
+                            (should (= 3 s))
+                            (should (= 6 e))))
     (should (= 1 (point)))))
 
 (ert-deftest around-motion ()
-  (motion-define motion-test1 (:around t)
-                 "test"
-                 (cond
-                  (motion--mode
-                   (let ((thing (bounds-of-thing-at-point 'word)))
-                     (and thing
-                          (list (car thing) (cdr thing)))))
-                  (t
-                   (let ((s (point)))
-                     (forward-word)
-                     (list s (point)))
-                   ))
-                 )
+  (motion-define motion-test1
+      "test"
+    :inner
+    (let ((thing (bounds-of-thing-at-point 'word)))
+      (and thing
+           (cons (car thing) (cdr thing))))
+    :outer
+    (let ((thing (bounds-of-thing-at-point 'word)))
+      (and thing
+           (cons (car thing) (cdr thing))))
+    :forward
+    (let ((s (point)))
+      (forward-word)
+      (cons s (point))))
+  
   (with-temp-buffer
     (insert "foo bar baz")
     (goto-char 2)
 
-    (motion-test1 (lambda (s e)
-                    (should (= 2 s))
-                    (should (= 4 e))))
-    (motion-test1-inner (lambda (s e)
-                          (should (= 1 s))
-                          (should (= 4 e))))
-    (motion-test1-outer (lambda (s e)
-                          (should (= 1 s))
-                          (should (= 4 e))))
+    (motion-test1-forward (lambda (s e)
+                            (should (= 2 s))
+                            (should (= 4 e))))
+    (motion-test1-around-inner (lambda (s e)
+                                 (should (= 1 s))
+                                 (should (= 4 e))))
+    (motion-test1-around-outer (lambda (s e)
+                                 (should (= 1 s))
+                                 (should (= 4 e))))
     ))
 
 (ert-deftest do-not-apply-operator-if-motion-return-nil ()
-  (motion-define motion-test1 (:around t)
-                 "test"
-                 nil
-                 )
+  (motion-define motion-test1
+      "test"
+    :inner
+    (progn nil)
+    )
   (with-temp-buffer
     (insert "foo bar baz")
     (goto-char 2)
 
     (let (called)
-      (motion-test1 (lambda (s e)
-                      (setq called t)))
+      (motion-test1-around-inner (lambda (s e)
+                                   (setq called t)))
       (should (equal called nil)))
     ))
 
 (ert-deftest motion-for-thing ()
-  (motion-define-thing motion-thing `word)
+  (motion-define-thing motion-thing 'word)
   (with-temp-buffer
     (insert "foo bar baz")
     (goto-char 2)
 
-    (motion-thing (lambda (s e)
-                    (should (= 2 s))
-                    (should (= 4 e))))
-    (motion-thing-inner (lambda (s e)
-                          (should (= 1 s))
-                          (should (= 4 e))))
-    (motion-thing-outer (lambda (s e)
-                          (should (= 1 s))
-                          (should (= 4 e))))
+    (motion-thing-forward (lambda (s e)
+                            (should (= 2 s))
+                            (should (= 4 e))))
+    (motion-thing-around-inner (lambda (s e)
+                                 (should (= 1 s))
+                                 (should (= 4 e))))
+    (motion-thing-around-outer (lambda (s e)
+                                 (should (= 1 s))
+                                 (should (= 4 e))))
     ))
 
 (ert t)
