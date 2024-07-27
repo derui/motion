@@ -24,11 +24,11 @@
       "test"
     :forward
     '(1 . 3))
-  (let* ((ret (motion-test1-forward (lambda (s e)
-                                      (should (= 1 s))
-                                      (should (= 3 e))
-                                      (+ s e))
-                                    )))
+  (let* ((ret (funcall (motion-test1-forward (lambda (s e)
+                                               (should (= 1 s))
+                                               (should (= 3 e))
+                                               (+ s e))
+                                             ))))
     (should (= ret 4)))
   (should (not (fboundp 'motion-test1-backward)))
   (should (not (fboundp 'motion-test1-inner)))
@@ -39,16 +39,16 @@
   (motion-define motion-test1
       "test"
     :forward
-    (progn 
+    (progn
       (forward-char 2)
       (cons (point) (+ (point) 3))))
   (with-temp-buffer
     (insert "foobarbaz")
     (goto-char (point-min))
 
-    (motion-test1-forward (lambda (s e)
-                            (should (= 3 s))
-                            (should (= 6 e))))
+    (funcall (motion-test1-forward (lambda (s e)
+                                     (should (= 3 s))
+                                     (should (= 6 e)))))
     (should (= 1 (point)))))
 
 (ert-deftest around-motion ()
@@ -71,15 +71,15 @@
     (insert "foo bar baz")
     (goto-char 2)
 
-    (motion-test1-forward (lambda (s e)
-                            (should (= 2 s))
-                            (should (= 4 e))))
-    (motion-test1-around-inner (lambda (s e)
-                                 (should (= 1 s))
-                                 (should (= 4 e))))
-    (motion-test1-around-outer (lambda (s e)
-                                 (should (= 1 s))
-                                 (should (= 4 e))))
+    (funcall (motion-test1-forward (lambda (s e)
+                                     (should (= 2 s))
+                                     (should (= 4 e)))))
+    (funcall (motion-test1-around-inner (lambda (s e)
+                                          (should (= 1 s))
+                                          (should (= 4 e)))))
+    (funcall (motion-test1-around-outer (lambda (s e)
+                                          (should (= 1 s))
+                                          (should (= 4 e)))))
     ))
 
 (ert-deftest do-not-apply-operator-if-motion-return-nil ()
@@ -93,8 +93,8 @@
     (goto-char 2)
 
     (let (called)
-      (motion-test1-around-inner (lambda (s e)
-                                   (setq called t)))
+      (funcall (motion-test1-around-inner (lambda (s e)
+                                            (setq called t))))
       (should (equal called nil)))
     ))
 
@@ -104,18 +104,18 @@
     (insert "foo bar baz")
     (goto-char 2)
 
-    (motion-thing-forward (lambda (s e)
-                            (should (= 2 s))
-                            (should (= 4 e))))
-    (motion-thing-backward (lambda (s e)
-                             (should (= 1 s))
-                             (should (= 2 e))))
-    (motion-thing-around-inner (lambda (s e)
-                                 (should (= 1 s))
-                                 (should (= 4 e))))
-    (motion-thing-around-outer (lambda (s e)
-                                 (should (= 1 s))
-                                 (should (= 4 e))))
+    (funcall (motion-thing-forward (lambda (s e)
+                                     (should (= 2 s))
+                                     (should (= 4 e)))))
+    (funcall (motion-thing-backward (lambda (s e)
+                                      (should (= 1 s))
+                                      (should (= 2 e)))))
+    (funcall (motion-thing-around-inner (lambda (s e)
+                                          (should (= 1 s))
+                                          (should (= 4 e)))))
+    (funcall (motion-thing-around-outer (lambda (s e)
+                                          (should (= 1 s))
+                                          (should (= 4 e)))))
     ))
 
 (ert-deftest motion-for-pair ()
@@ -124,10 +124,10 @@
     (insert "'ignored' skip 'should be'")
     (search-forward "skip" nil t)
 
-    (motion-pair-around-inner (lambda (s e)
-                                (should (string= (buffer-substring s e) "should be"))))
-    (motion-pair-around-outer (lambda (s e)
-                                (should (string= (buffer-substring s e) "'should be'"))))
+    (funcall (motion-pair-around-inner (lambda (s e)
+                                         (should (string= (buffer-substring s e) "should be")))))
+    (funcall (motion-pair-around-outer (lambda (s e)
+                                         (should (string= (buffer-substring s e) "'should be'")))))
     ))
 
 (ert-deftest motion-for-pair-with-bound ()
@@ -137,10 +137,10 @@
  `should be'")
     (search-forward "skip" nil t)
 
-    (motion-pair-around-inner (lambda (s e)
-                                (should (string= (buffer-substring s e) "should be"))))
-    (motion-pair-around-outer (lambda (s e)
-                                (should (string= (buffer-substring s e) "'should be'"))))
+    (funcall (motion-pair-around-inner (lambda (s e)
+                                         (should (string= (buffer-substring s e) "should be")))))
+    (funcall (motion-pair-around-outer (lambda (s e)
+                                         (should (string= (buffer-substring s e) "'should be'")))))
     ))
 
 (ert-deftest motion-for-pair-without-bound ()
@@ -150,10 +150,10 @@
  `should be'")
     (search-forward "skip" nil t)
 
-    (motion-pair-around-inner (lambda (s e)
-                                (ert-fail "should not call this operator")))
-    (motion-pair-around-outer (lambda (s e)
-                                (ert-fail "should not call this operator")))
+    (funcall (motion-pair-around-inner (lambda (s e)
+                                         (ert-fail "should not call this operator"))))
+    (funcall (motion-pair-around-outer (lambda (s e)
+                                         (ert-fail "should not call this operator"))))
     ))
 
 (ert-deftest motion-pair-withtou-bound-contains-newline ()
@@ -163,10 +163,10 @@
 be'")
     (search-forward "skip" nil t)
 
-    (motion-pair-around-inner (lambda (s e)
-                                (ert-fail "should not call this operator")))
-    (motion-pair-around-outer (lambda (s e)
-                                (ert-fail "should not call this operator")))
+    (funcall (motion-pair-around-inner (lambda (s e)
+                                         (ert-fail "should not call this operator"))))
+    (funcall (motion-pair-around-outer (lambda (s e)
+                                         (ert-fail "should not call this operator"))))
     ))
 
 (ert t)

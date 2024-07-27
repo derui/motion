@@ -60,38 +60,46 @@ generated function.
         (fname (symbol-name name)))
     `(progn
        ,(when forward-body
-          `(defun ,(intern (seq-concatenate 'string fname "-forward")) (operator &rest args)
+          `(defun ,(intern (seq-concatenate 'string fname "-forward")) (operator)
              ,docstring
-             (save-excursion
-               (when-let* ((region ,forward-body))
-                 (funcall operator (car region) (cdr region))
-                 ))
+             (lambda (&rest arg)
+               (interactive)
+               (save-excursion
+                 (when-let* ((region ,forward-body))
+                   (funcall operator (car region) (cdr region))
+                   )))
              )
           )
        ,(when backward-body
-          `(defun ,(intern (seq-concatenate 'string fname "-backward")) (operator &rest args)
+          `(defun ,(intern (seq-concatenate 'string fname "-backward")) (operator)
              ,docstring
-             (save-excursion
-               (when-let* ((region ,backward-body))
-                 (funcall operator (car region) (cdr region))
-                 ))
+             (lambda (&rest arg)
+               (interactive)
+               (save-excursion
+                 (when-let* ((region ,backward-body))
+                   (funcall operator (car region) (cdr region))
+                   )))
              )
           )
        ,(when inner-body
-          `(defun ,(intern (seq-concatenate 'string fname "-around-inner")) (operator &rest args)
+          `(defun ,(intern (seq-concatenate 'string fname "-around-inner")) (operator)
              ,docstring
-             (save-excursion
-               (when-let* ((region ,inner-body))
-                 (funcall operator (car region) (cdr region))
-                 ))
+             (lambda (&rest arg)
+               (interactive)
+               (save-excursion
+                 (when-let* ((region ,inner-body))
+                   (funcall operator (car region) (cdr region))
+                   )))
              ))
        ,(when outer-body
-          `(defun ,(intern (seq-concatenate 'string fname "-around-outer")) (operator &rest args)
+          `(defun ,(intern (seq-concatenate 'string fname "-around-outer")) (operator)
              ,docstring
-             (save-excursion
-               (when-let* ((region ,outer-body))
-                 (funcall operator (car region) (cdr region))
-                 ))
+             (lambda (&rest arg)
+               (interactive)
+               (save-excursion
+                 (when-let* ((region ,outer-body))
+                   (funcall operator (car region) (cdr region))
+                   )))
              ))
        ))
   )
@@ -155,7 +163,7 @@ a buffer is too large.
                            `(search-forward ,end-char-str (pos-eol) t)))
                    (end-fixed (and end
                                    (1- end))))
-         (start . end-fixed))
+         '(start . end-fixed))
        :outer
        (when-let* ((start ,(if not-bound
                                `(search-forward ,start-char-str nil t)
@@ -165,7 +173,7 @@ a buffer is too large.
                    (end ,(if not-bound
                              `(search-forward ,end-char-str nil t)
                            `(search-forward ,end-char-str (pos-eol) t))))
-         (start-fixed . end))))
+         '(start-fixed . end))))
   )
 
 (provide 'motion)
