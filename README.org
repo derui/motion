@@ -35,7 +35,7 @@ Example:
 ~motion-define~ macro defines ~<name-of-motion>-forward/backward/around-inner/around-outer~ functions at once. If you do not pass definition of motion with parameter symbol, that type ignores from macro.
 
 *** Internal arguments
-Definitions can use pre-defined arguments that are named ~operator~ and ~args~ . The argument ~operator~ is required argument of the function, and it is used by internal. But user can manipulate this function before macro uses.
+Definitions can use predefined arguments that are named ~operator~ and ~args~ . The argument ~operator~ is required argument of the function, and it is used by internal. But user can manipulate this function before macro uses.
 
 The second argument ~args~ is optional argument of the function. It
 
@@ -77,7 +77,7 @@ If you want to define motion between characters, such as single-quote( ~'~ ), do
 Defined motion uses as normal function. All of functions has same argument definition that it is ~(operator &rest args)~ .
 
 #+begin_quote
-All motion functions defined by macro are *NOT* command. It can not use with keybind directly. 
+All motion functions defined by macro are *NOT* command. It can not use with key-bind directly. 
 #+end_quote
 
 #+begin_src emacs-lisp
@@ -89,7 +89,7 @@ All motion functions defined by macro are *NOT* command. It can not use with key
   (motion-function)
 #+end_src
 
-Operator passed by user should have two arguments that holds region defined by callee motion.
+Operator passed by user should have two arguments that holds region defined by caller motion.
 
 *** With other libraries
 This library aims to use with other libraries that defines modal-editing system such as [[https://github.com/mrkkrp/modalka][modalka]], [[https://github.com/Kungsgeten/ryo-modal][ryo-modal]], [[https://gitlab.com/matsievskiysv/multistate][multistate]] or others. All functions returns higher-ordered command.
