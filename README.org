@@ -1,4 +1,4 @@
-* An simple vim-like motion library
+* A simple vim-like motion library
 This package provides a function set to define and use motion that is like vim's it.
 
 - No any third package requires
