@@ -118,4 +118,55 @@
                                  (should (= 4 e))))
     ))
 
+(ert-deftest motion-for-pair ()
+  (motion-define-pair motion-pair (?' . ?'))
+  (with-temp-buffer
+    (insert "'ignored' skip 'should be'")
+    (search-forward "skip" nil t)
+
+    (motion-pair-around-inner (lambda (s e)
+                                (should (string= (buffer-substring s e) "should be"))))
+    (motion-pair-around-outer (lambda (s e)
+                                (should (string= (buffer-substring s e) "'should be'"))))
+    ))
+
+(ert-deftest motion-for-pair-with-bound ()
+  (motion-define-pair motion-pair (?` . ?') t)
+  (with-temp-buffer
+    (insert "'ignored' skip
+ `should be'")
+    (search-forward "skip" nil t)
+
+    (motion-pair-around-inner (lambda (s e)
+                                (should (string= (buffer-substring s e) "should be"))))
+    (motion-pair-around-outer (lambda (s e)
+                                (should (string= (buffer-substring s e) "'should be'"))))
+    ))
+
+(ert-deftest motion-for-pair-without-bound ()
+  (motion-define-pair motion-pair (?` . ?') t)
+  (with-temp-buffer
+    (insert "'ignored' skip
+ `should be'")
+    (search-forward "skip" nil t)
+
+    (motion-pair-around-inner (lambda (s e)
+                                (ert-fail "should not call this operator")))
+    (motion-pair-around-outer (lambda (s e)
+                                (ert-fail "should not call this operator")))
+    ))
+
+(ert-deftest motion-pair-withtou-bound-contains-newline ()
+  (motion-define-pair motion-pair (?' . ?') t)
+  (with-temp-buffer
+    (insert "'ignored' skip 'should
+be'")
+    (search-forward "skip" nil t)
+
+    (motion-pair-around-inner (lambda (s e)
+                                (ert-fail "should not call this operator")))
+    (motion-pair-around-outer (lambda (s e)
+                                (ert-fail "should not call this operator")))
+    ))
+
 (ert t)
