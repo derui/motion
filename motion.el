@@ -21,7 +21,7 @@
 ;;   :forward
 ;;   (let* ((start (point)))
 ;;     (forwardh-word)
-;;     (list start . (point))))
+;;     (cons start (point))))
 ;;
 ;; You can use `my:new-motion-forward' as function to run operator with region
 ;; from current point to next word.
