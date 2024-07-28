@@ -97,7 +97,7 @@ This macro defines motion via `motion-define' with `NAME'.
 Use `THING' in defined motion.
 Allowed `THING' for this macro is same as `thing-at-point'.
 "
-  `(motion-define ,name "Motion for `THING'"
+  `(motion-define ,(intern (symbol-name name)) "Motion for `THING'"
      :inner
      (let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (cdr thing)))
@@ -133,12 +133,12 @@ If `NOT-BOUND' is passed with any symbol, defined motion searchs
 forward to end of the buffer. This behavior may occur some performance issues when
 a buffer is too large.
 "
-  (when-let* (pair
+  (when-let* ((pair pair)
               (start-char (car pair))
               (end-char (cdr pair))
               (start-char-str (string start-char))
               (end-char-str (string end-char)))
-    `(motion-define ,name ,(format "Motion for `PAIR' %s/%s" start-char-str end-char-str)
+    `(motion-define ,(intern (symbol-name name)) ,(format "Motion for `PAIR' %s/%s" start-char-str end-char-str)
        :inner
        (when-let* ((start ,(if not-bound
                                `(or (when-let ((_ (search-backward ,start-char-str nil t)))
