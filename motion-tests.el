@@ -119,7 +119,7 @@
     ))
 
 (ert-deftest motion-for-pair ()
-  (motion-define-pair motion-pair (?' . ?'))
+  (motion-define-pair motion-pair '(?' . ?'))
   (with-temp-buffer
     (insert "'ignored' skip 'should be'")
     (search-forward "skip" nil t)
@@ -131,7 +131,7 @@
     ))
 
 (ert-deftest motion-for-pair-with-bound ()
-  (motion-define-pair motion-pair (?` . ?') t)
+  (motion-define-pair motion-pair '(?` . ?') t)
   (with-temp-buffer
     (insert "'ignored' skip
  `should be'")
@@ -144,7 +144,7 @@
     ))
 
 (ert-deftest motion-for-pair-without-bound ()
-  (motion-define-pair motion-pair (?` . ?') t)
+  (motion-define-pair motion-pair '(?` . ?') t)
   (with-temp-buffer
     (insert "'ignored' skip
  `should be'")
@@ -157,7 +157,7 @@
     ))
 
 (ert-deftest motion-pair-withtou-bound-contains-newline ()
-  (motion-define-pair motion-pair (?' . ?') t)
+  (motion-define-pair motion-pair '(?' . ?') t)
   (with-temp-buffer
     (insert "'ignored' skip 'should
 be'")
@@ -170,7 +170,7 @@ be'")
     ))
 
 (ert-deftest motion-after-hook ()
-  (motion-define-pair motion-pair (?' . ?') t)
+  (motion-define-pair motion-pair '(?' . ?') t)
   (with-temp-buffer
     (insert "'ignored' skip 'should
 be'")
@@ -186,7 +186,7 @@ be'")
     ))
 
 (ert-deftest around-pair-from-included-with-bound ()
-  (motion-define-pair motion-pair (?' . ?'))
+  (motion-define-pair motion-pair '(?' . ?'))
   (with-temp-buffer
     (insert "'ignored'")
     (goto-char (point-min))
@@ -204,7 +204,7 @@ be'")
     ))
 
 (ert-deftest around-pair-from-included-without-bound ()
-  (motion-define-pair motion-pair (?\[ . ?\]) t)
+  (motion-define-pair motion-pair '(?\[ . ?\]) t)
   (with-temp-buffer
     (insert "before [ignored,
 other

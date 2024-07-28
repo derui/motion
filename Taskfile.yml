@@ -10,10 +10,8 @@ tasks:
   build:
     sources:
       - "motion.el"
-      - "motion-tests.el"
     generates:
       - "motion.elc"
-      - "motion-tests.el"
     cmds:
       - for: sources
         cmd: '{{ .EMACS_BATCH }} -f batch-byte-compile {{ .ITEM }}'
@@ -21,6 +19,7 @@ tasks:
   test:
     deps: [build]
     cmds:
+      - '{{ .EMACS_BATCH }} -f batch-byte-compile motion-tests.el'
       - '{{ .EMACS_BATCH }} -l motion-tests.el -l ert --eval "(ert-run-tests-batch-and-exit)"'
       - '{{ .EMACS_BATCH }} -l motion-tests.elc -l ert --eval "(ert-run-tests-batch-and-exit)"'
   clean:

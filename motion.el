@@ -121,8 +121,7 @@ character to define pair.
 
 Motions defined by this macro does not have forward/backward motion.
 
-For example, Given pair to define motion for single quote should be
-(?' . ?') .
+For example, Given pair to define motion for single quote should be '(?' . ?') .
 Do not call operator from defined motions if not found any pair from
 search area defined below..
 
@@ -133,7 +132,7 @@ If `NOT-BOUND' is passed with any symbol, defined motion searchs
 forward to end of the buffer. This behavior may occur some performance issues when
 a buffer is too large.
 "
-  (when-let* ((pair pair)
+  (when-let* ((pair (cadr pair))
               (start-char (car pair))
               (end-char (cdr pair))
               (start-char-str (string start-char))
