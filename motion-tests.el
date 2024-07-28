@@ -169,4 +169,19 @@ be'")
                                          (ert-fail "should not call this operator"))))
     ))
 
+(ert-deftest motion-after-hook ()
+  (motion-define-pair motion-pair (?' . ?') t)
+  (with-temp-buffer
+    (insert "'ignored' skip 'should
+be'")
+    (search-forward "skip" nil t)
+
+    (funcall (motion-pair-around-inner (lambda (s e) (ignore))
+                                       :after
+                                       (lambda () (should t))))
+    (funcall (motion-pair-around-outer (lambda (s e) (ignore))
+                                       :after
+                                       (lambda () (should t))))
+    ))
+
 (ert t)
