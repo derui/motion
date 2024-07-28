@@ -4,7 +4,7 @@
 ;; Author: derui <derutakayu@gmail.com>
 ;; Maintainer: derui <derutakayu@gmail.com>
 ;; URL: 
-;; Version: 0.1.0
+;; Version: 0.2.0
 ;; Created: 2024
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: editing
@@ -35,6 +35,21 @@
   "motion customization group"
   :prefix "motion-")
 
+(defmacro motion--define-internal-motion (fname docstring body)
+  "Return internal definition of motion."
+  `(defun ,(intern fname) (operator &rest arguments)
+     ,docstring
+     (let ((after-hook (plist-get arguments :after)))
+       (lambda (&rest arg)
+         (interactive)
+         (save-excursion
+           (prog1
+               (when-let* ((region ,body))
+                 (funcall operator (car region) (cdr region)))
+             (when after-hook
+               (funcall after-hook)))))))
+  )
+
 ;;;###autoload
 (defmacro motion-define (name docstring &rest definitions)
   "Define motion wity definition.
@@ -60,47 +75,17 @@ generated function.
         (fname (symbol-name name)))
     `(progn
        ,(when forward-body
-          `(defun ,(intern (seq-concatenate 'string fname "-forward")) (operator)
-             ,docstring
-             (lambda (&rest arg)
-               (interactive)
-               (save-excursion
-                 (when-let* ((region ,forward-body))
-                   (funcall operator (car region) (cdr region))
-                   )))
-             )
-          )
+          (let ((fname (seq-concatenate 'string fname "-forward")))
+            `(motion--define-internal-motion ,fname ,docstring ,forward-body)))
        ,(when backward-body
-          `(defun ,(intern (seq-concatenate 'string fname "-backward")) (operator)
-             ,docstring
-             (lambda (&rest arg)
-               (interactive)
-               (save-excursion
-                 (when-let* ((region ,backward-body))
-                   (funcall operator (car region) (cdr region))
-                   )))
-             )
-          )
+          (let ((fname (seq-concatenate 'string fname "-backward")))
+            `(motion--define-internal-motion ,fname ,docstring ,backward-body)))
        ,(when inner-body
-          `(defun ,(intern (seq-concatenate 'string fname "-around-inner")) (operator)
-             ,docstring
-             (lambda (&rest arg)
-               (interactive)
-               (save-excursion
-                 (when-let* ((region ,inner-body))
-                   (funcall operator (car region) (cdr region))
-                   )))
-             ))
+          (let ((fname (seq-concatenate 'string fname "-around-inner")))
+            `(motion--define-internal-motion ,fname ,docstring ,inner-body)))
        ,(when outer-body
-          `(defun ,(intern (seq-concatenate 'string fname "-around-outer")) (operator)
-             ,docstring
-             (lambda (&rest arg)
-               (interactive)
-               (save-excursion
-                 (when-let* ((region ,outer-body))
-                   (funcall operator (car region) (cdr region))
-                   )))
-             ))
+          (let ((fname (seq-concatenate 'string fname "-around-outer")))
+            `(motion--define-internal-motion ,fname ,docstring ,outer-body)))
        ))
   )
 
@@ -163,7 +148,7 @@ a buffer is too large.
                            `(search-forward ,end-char-str (pos-eol) t)))
                    (end-fixed (and end
                                    (1- end))))
-         '(start . end-fixed))
+         (cons start end-fixed))
        :outer
        (when-let* ((start ,(if not-bound
                                `(search-forward ,start-char-str nil t)
@@ -173,7 +158,7 @@ a buffer is too large.
                    (end ,(if not-bound
                              `(search-forward ,end-char-str nil t)
                            `(search-forward ,end-char-str (pos-eol) t))))
-         '(start-fixed . end))))
+         (cons start-fixed end))))
   )
 
 (provide 'motion)
