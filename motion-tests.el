@@ -125,9 +125,9 @@
     (search-forward "skip" nil t)
 
     (funcall (motion-pair-around-inner (lambda (s e)
-                                         (should (string= (buffer-substring s e) "should be")))))
+                                         (should (string= (buffer-substring s e) " skip ")))))
     (funcall (motion-pair-around-outer (lambda (s e)
-                                         (should (string= (buffer-substring s e) "'should be'")))))
+                                         (should (string= (buffer-substring s e) "' skip '")))))
     ))
 
 (ert-deftest motion-for-pair-with-bound ()
@@ -140,7 +140,7 @@
     (funcall (motion-pair-around-inner (lambda (s e)
                                          (should (string= (buffer-substring s e) "should be")))))
     (funcall (motion-pair-around-outer (lambda (s e)
-                                         (should (string= (buffer-substring s e) "'should be'")))))
+                                         (should (string= (buffer-substring s e) "`should be'")))))
     ))
 
 (ert-deftest motion-for-pair-without-bound ()
@@ -151,9 +151,9 @@
     (search-forward "skip" nil t)
 
     (funcall (motion-pair-around-inner (lambda (s e)
-                                         (ert-fail "should not call this operator"))))
+                                         (should (string= (buffer-substring s e) "should be")))))
     (funcall (motion-pair-around-outer (lambda (s e)
-                                         (ert-fail "should not call this operator"))))
+                                         (should (string= (buffer-substring s e) "`should be'")))))
     ))
 
 (ert-deftest motion-pair-withtou-bound-contains-newline ()
@@ -161,7 +161,7 @@
   (with-temp-buffer
     (insert "'ignored' skip 'should
 be'")
-    (search-forward "skip" nil t)
+    (search-forward "should" nil t)
 
     (funcall (motion-pair-around-inner (lambda (s e)
                                          (ert-fail "should not call this operator"))))
@@ -174,6 +174,7 @@ be'")
   (with-temp-buffer
     (insert "'ignored' skip 'should
 be'")
+    (goto-char (point-min))
     (search-forward "skip" nil t)
 
     (funcall (motion-pair-around-inner (lambda (s e) (ignore))
@@ -182,6 +183,47 @@ be'")
     (funcall (motion-pair-around-outer (lambda (s e) (ignore))
                                        :after
                                        (lambda () (should t))))
+    ))
+
+(ert-deftest around-pair-from-included-with-bound ()
+  (motion-define-pair motion-pair (?' . ?'))
+  (with-temp-buffer
+    (insert "'ignored'")
+    (goto-char (point-min))
+    (search-forward "n" nil t)
+
+    (let (ret-inner ret-outer)
+      (setq ret-inner 
+            (funcall (motion-pair-around-inner (lambda (s e)
+                                                 (should (string= "ignored" (buffer-substring s e)))))))
+      (setq ret-outer
+            (funcall (motion-pair-around-outer (lambda (s e)
+                                                 (should (string= "'ignored'" (buffer-substring s e)))))))
+
+      (should (and ret-inner ret-outer)))
+    ))
+
+(ert-deftest around-pair-from-included-without-bound ()
+  (motion-define-pair motion-pair (?\[ . ?\]) t)
+  (with-temp-buffer
+    (insert "before [ignored,
+other
+]")
+    (goto-char (point-min))
+    (search-forward "nore" nil t)
+
+    (let (ret-inner
+          ret-outer)
+      (setq ret-inner
+            (funcall (motion-pair-around-inner (lambda (s e)
+                                                 (should (string= "ignored,\nother\n" (buffer-substring s e)))
+                                                 t))))
+      (setq ret-outer
+            (funcall (motion-pair-around-outer (lambda (s e)
+                                                 (should (string= "[ignored,\nother\n]" (buffer-substring s e)))
+                                                 t))))
+
+      (should (and ret-inner ret-outer)))
     ))
 
 (ert t)

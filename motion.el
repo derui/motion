@@ -141,8 +141,14 @@ a buffer is too large.
     `(motion-define ,name ,(format "Motion for `PAIR' %s/%s" start-char-str end-char-str)
        :inner
        (when-let* ((start ,(if not-bound
-                               `(search-forward ,start-char-str nil t)
-                             `(search-forward ,start-char-str (pos-eol) t)))
+                               `(or (when-let ((_ (search-backward ,start-char-str nil t)))
+                                      (forward-char)
+                                      (point))
+                                    (search-forward ,start-char-str nil t))
+                             `(or (when-let ((_ (search-backward ,start-char-str (pos-bol) t)))
+                                    (forward-char)
+                                    (point))
+                                  (search-forward ,start-char-str (pos-eol) t))))
                    (end ,(if not-bound
                              `(search-forward ,end-char-str nil t)
                            `(search-forward ,end-char-str (pos-eol) t)))
@@ -151,8 +157,14 @@ a buffer is too large.
          (cons start end-fixed))
        :outer
        (when-let* ((start ,(if not-bound
-                               `(search-forward ,start-char-str nil t)
-                             `(search-forward ,start-char-str (pos-eol) t)))
+                               `(or (when-let ((_ (search-backward ,start-char-str nil t)))
+                                      (forward-char)
+                                      (point))
+                                    (search-forward ,start-char-str nil t))
+                             `(or (when-let ((_ (search-backward ,start-char-str (pos-bol) t)))
+                                    (forward-char)
+                                    (point))
+                                  (search-forward ,start-char-str (pos-eol) t))))
                    (start-fixed (and start
                                      (1- start)))
                    (end ,(if not-bound
