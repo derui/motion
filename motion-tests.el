@@ -226,4 +226,47 @@ other
       (should (and ret-inner ret-outer)))
     ))
 
+(ert-deftest pair-balance ()
+  (motion-define-pair motion-pair '(?\[ . ?\]) t)
+  (with-temp-buffer
+    (insert "[outer, [inner], outer2]")
+    (goto-char (point-min))
+    (search-forward "ter" nil t)
+
+    (let (ret-inner
+          ret-outer)
+      (setq ret-inner
+            (funcall (motion-pair-around-inner (lambda (s e)
+                                                 (should (string= "outer, [inner], outer2" (buffer-substring s e)))
+                                                 t))))
+      (setq ret-outer
+            (funcall (motion-pair-around-outer (lambda (s e)
+                                                 (should (string= "[outer, [inner], outer2]" (buffer-substring s e)))
+                                                 t))))
+
+      (should (and ret-inner ret-outer)))
+    ))
+
+(ert-deftest pair-unbalanced ()
+  (motion-define-pair motion-pair '(?\[ . ?\]) t)
+  (with-temp-buffer
+    (insert "[outer, [inner], outer2")
+    (goto-char (point-min))
+    (search-forward "ter" nil t)
+
+    (let (ret-inner
+          ret-outer)
+      (setq ret-inner
+            (funcall (motion-pair-around-inner (lambda (s e)
+                                                 (should (string= "outer, [inner], outer2" (buffer-substring s e)))
+                                                 t))))
+      (setq ret-outer
+            (funcall (motion-pair-around-outer (lambda (s e)
+                                                 (should (string= "[outer, [inner], outer2]" (buffer-substring s e)))
+                                                 t))))
+
+      (should (and (not ret-inner)
+                   (not ret-outer))))
+    ))
+
 (ert t)
