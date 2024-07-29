@@ -4,7 +4,7 @@
 ;; Author: derui <derutakayu@gmail.com>
 ;; Maintainer: derui <derutakayu@gmail.com>
 ;; URL: 
-;; Version: 0.2.2
+;; Version: 0.3.0
 ;; Created: 2024
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: editing
@@ -112,6 +112,45 @@ Allowed `THING' for this macro is same as `thing-at-point'.
        (cons (car thing) (point)))
      ))
 
+(defmacro motion--get-balanced-region-of-pair (pair not-bound)
+  "Generate code to get balanced region of pair.
+
+This macro can not handle same character in pair"
+  (unless (and (listp pair)
+               (not (char-equal (caadr pair) (cdadr pair))))
+    (error "pair must have difference characters"))
+
+  (when-let* ((pair (cadr pair))
+              (start-char (car pair))
+              (end-char (cdr pair))
+              (start-char-str (string start-char))
+              (end-char-str (string end-char))
+              (char-regex (regexp-opt (list start-char-str end-char-str))))
+    `(let (stack end)
+       (when-let* ((start ,(if not-bound
+                               `(or(when (search-backward ,start-char-str nil t)
+                                     (forward-char 1)
+                                     (point))
+                                   (search-forward ,start-char-str nil t))
+                             `(or (when (search-backward ,start-char-str (pos-bol) t)
+                                    (forward-char 1)
+                                    (point))
+                                  (search-forward ,start-char-str (pos-eol) t))))
+                   (stack (push start stack)))
+         (ignore-errors
+           (while stack
+             (let* ((searched-point (search-forward-regexp ,char-regex ,(if not-bound 'nil '(pos-eol))))
+                    (char (match-string-no-properties 0)))
+               (cond
+                ((string= ,start-char-str char)
+                 (push searched-point stack))
+                ((string= ,end-char-str char)
+                 (when (= 1 (seq-length stack))
+                   (setq end searched-point))
+                 (pop stack))))))
+         (when end
+           (cons (1- start) end))))))
+
 ;;;###autoload
 (defmacro motion-define-pair (name pair &optional not-bound)
   "Define motion for `PAIR'
@@ -137,39 +176,51 @@ a buffer is too large.
               (end-char (cdr pair))
               (start-char-str (string start-char))
               (end-char-str (string end-char)))
-    `(motion-define ,(intern (symbol-name name)) ,(format "Motion for `PAIR' %s/%s" start-char-str end-char-str)
-       :inner
-       (when-let* ((start ,(if not-bound
-                               `(or (when-let ((_ (search-backward ,start-char-str nil t)))
-                                      (forward-char)
-                                      (point))
-                                    (search-forward ,start-char-str nil t))
-                             `(or (when-let ((_ (search-backward ,start-char-str (pos-bol) t)))
-                                    (forward-char)
-                                    (point))
-                                  (search-forward ,start-char-str (pos-eol) t))))
-                   (end ,(if not-bound
-                             `(search-forward ,end-char-str nil t)
-                           `(search-forward ,end-char-str (pos-eol) t)))
-                   (end-fixed (and end
-                                   (1- end))))
-         (cons start end-fixed))
-       :outer
-       (when-let* ((start ,(if not-bound
-                               `(or (when-let ((_ (search-backward ,start-char-str nil t)))
-                                      (forward-char)
-                                      (point))
-                                    (search-forward ,start-char-str nil t))
-                             `(or (when-let ((_ (search-backward ,start-char-str (pos-bol) t)))
-                                    (forward-char)
-                                    (point))
-                                  (search-forward ,start-char-str (pos-eol) t))))
-                   (start-fixed (and start
-                                     (1- start)))
-                   (end ,(if not-bound
-                             `(search-forward ,end-char-str nil t)
-                           `(search-forward ,end-char-str (pos-eol) t))))
-         (cons start-fixed end))))
+    (if (string= start-char-str end-char-str)
+        `(motion-define ,(intern (symbol-name name)) ,(format "Motion for `PAIR' %s/%s" start-char-str end-char-str)
+           :inner
+           (when-let* ((start ,(if not-bound
+                                   `(or (when-let ((_ (search-backward ,start-char-str nil t)))
+                                          (forward-char)
+                                          (point))
+                                        (search-forward ,start-char-str nil t))
+                                 `(or (when-let ((_ (search-backward ,start-char-str (pos-bol) t)))
+                                        (forward-char)
+                                        (point))
+                                      (search-forward ,start-char-str (pos-eol) t))))
+                       (end ,(if not-bound
+                                 `(search-forward ,end-char-str nil t)
+                               `(search-forward ,end-char-str (pos-eol) t)))
+                       (end-fixed (and end
+                                       (1- end))))
+             (cons start end-fixed))
+           :outer
+           (when-let* ((start ,(if not-bound
+                                   `(or (when-let ((_ (search-backward ,start-char-str nil t)))
+                                          (forward-char)
+                                          (point))
+                                        (search-forward ,start-char-str nil t))
+                                 `(or (when-let ((_ (search-backward ,start-char-str (pos-bol) t)))
+                                        (forward-char)
+                                        (point))
+                                      (search-forward ,start-char-str (pos-eol) t))))
+                       (start-fixed (and start
+                                         (1- start)))
+                       (end ,(if not-bound
+                                 `(search-forward ,end-char-str nil t)
+                               `(search-forward ,end-char-str (pos-eol) t))))
+             (cons start-fixed end)))
+      `(motion-define ,(intern (symbol-name name)) ,(format "Motion for `PAIR' %s/%s" start-char-str end-char-str)
+         :inner
+         (when-let* ((region (motion--get-balanced-region-of-pair ',(cons start-char end-char) ,not-bound))
+                     (start (car region))
+                     (end (cdr region)))
+           (cons (1+ start) (1- end)))
+         :outer
+         (when-let* ((region (motion--get-balanced-region-of-pair ',(cons start-char end-char) ,not-bound))
+                     (start (car region))
+                     (end (cdr region)))
+           (cons start end)))))
   )
 
 (provide 'motion)
