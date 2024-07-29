@@ -4,7 +4,7 @@
 ;; Author: derui <derutakayu@gmail.com>
 ;; Maintainer: derui <derutakayu@gmail.com>
 ;; URL: 
-;; Version: 0.3.0
+;; Version: 0.3.1
 ;; Created: 2024
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: editing
@@ -99,16 +99,16 @@ Allowed `THING' for this macro is same as `thing-at-point'.
 "
   `(motion-define ,(intern (symbol-name name)) "Motion for `THING'"
      :inner
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (cdr thing)))
      :outer
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (cdr thing)))
      :forward
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (point) (cdr thing)))
      :backward
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (point)))
      ))
 
