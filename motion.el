@@ -41,7 +41,7 @@
      ,docstring
      (let ((func (make-symbol "operator"))
            (after-hook (plist-get arguments :after)))
-       (setq func operator)
+       (fset func operator)
        (lambda (&rest arg)
          (interactive)
          (save-excursion
