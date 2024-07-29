@@ -39,15 +39,13 @@
   "Return internal definition of motion."
   `(defun ,(intern fname) (operator &rest arguments)
      ,docstring
-     (let ((func (make-symbol "operator"))
-           (after-hook (plist-get arguments :after)))
-       (fset func operator)
+     (let ((after-hook (plist-get arguments :after)))
        (lambda (&rest arg)
          (interactive)
          (save-excursion
            (prog1
                (when-let* ((region ,body))
-                 (funcall func (car region) (cdr region)))
+                 (funcall operator (car region) (cdr region)))
              (when after-hook
                (funcall after-hook)))))))
   )

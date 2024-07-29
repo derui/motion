@@ -35,6 +35,22 @@
   (should (not (fboundp 'motion-test1-outer)))
   )
 
+(ert-deftest motion-with-defined-function-symbol ()
+  "define simplest motion"
+
+  (defun --internal (s e)
+    (should (= 1 s))
+    (should (= 3 e))
+    (+ s 3))
+  
+  (motion-define motion-test1
+      "test"
+    :forward
+    '(1 . 3))
+  (let* ((ret (funcall (motion-test1-forward '--internal))))
+    (should (= ret 4)))
+  )
+
 (ert-deftest save-excursion-on-motion ()
   (motion-define motion-test1
       "test"
