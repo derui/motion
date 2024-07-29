@@ -39,13 +39,15 @@
   "Return internal definition of motion."
   `(defun ,(intern fname) (operator &rest arguments)
      ,docstring
-     (let ((after-hook (plist-get arguments :after)))
+     (let ((func (make-symbol "operator"))
+           (after-hook (plist-get arguments :after)))
+       (setq func operator)
        (lambda (&rest arg)
          (interactive)
          (save-excursion
            (prog1
                (when-let* ((region ,body))
-                 (funcall operator (car region) (cdr region)))
+                 (funcall func (car region) (cdr region)))
              (when after-hook
                (funcall after-hook)))))))
   )
@@ -99,16 +101,16 @@ Allowed `THING' for this macro is same as `thing-at-point'.
 "
   `(motion-define ,(intern (symbol-name name)) "Motion for `THING'"
      :inner
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (cdr thing)))
      :outer
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (cdr thing)))
      :forward
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (point) (cdr thing)))
      :backward
-     (let ((thing (bounds-of-thing-at-point ,thing)))
+     (when-let ((thing (bounds-of-thing-at-point ,thing)))
        (cons (car thing) (point)))
      ))
 
