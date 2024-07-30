@@ -4,7 +4,7 @@
 ;; Author: derui <derutakayu@gmail.com>
 ;; Maintainer: derui <derutakayu@gmail.com>
 ;; URL: 
-;; Version: 0.3.1
+;; Version: 0.3.2
 ;; Created: 2024
 ;; Package-Requires: ((emacs "29.1"))
 ;; Keywords: editing
