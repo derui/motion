@@ -192,13 +192,21 @@ be'")
 be'")
     (goto-char (point-min))
     (search-forward "skip" nil t)
+    (let (symbol-called)
 
-    (funcall (motion-pair-around-inner (lambda (s e) (ignore))
-                                       :after
-                                       (lambda () (should t))))
-    (funcall (motion-pair-around-outer (lambda (s e) (ignore))
-                                       :after
-                                       (lambda () (should t))))
+      (defun -after-hook ()
+        (setq symbol-called t))
+
+      (funcall (motion-pair-around-inner (lambda (s e) (ignore))
+                                         :after
+                                         (lambda () (should t))))
+      (funcall (motion-pair-around-outer (lambda (s e) (ignore))
+                                         :after
+                                         (lambda () (should t))))
+      (funcall (motion-pair-around-outer (lambda (s e) (ignore))
+                                         :after
+                                         #'-after-hook))
+      (should symbol-called))
     ))
 
 (ert-deftest around-pair-from-included-with-bound ()

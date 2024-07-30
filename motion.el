@@ -39,16 +39,16 @@
   "Return internal definition of motion."
   `(defun ,(intern fname) (operator &rest arguments)
      ,docstring
-     (let ((after-hook (plist-get arguments :after)))
-       (lambda (&rest arg)
-         (interactive)
-         (save-excursion
-           (prog1
-               (when-let* ((region ,body))
-                 (funcall operator (car region) (cdr region)))
-             (when after-hook
-               (funcall after-hook)))))))
-  )
+     (let ((after-hook (plist-get arguments :after))
+           (body ',body))
+       `(lambda (&rest arg)
+          (interactive)
+          (save-excursion
+            (prog1
+                (when-let* ((region ,body))
+                  (,operator (car region) (cdr region)))
+              (when ',after-hook
+                (funcall ',after-hook))))))))
 
 ;;;###autoload
 (defmacro motion-define (name docstring &rest definitions)
