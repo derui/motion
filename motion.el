@@ -1,9 +1,9 @@
-;;; motion.el -*- lexical-binding: t; byte-compile-docstring-max-column: 120; -*-
+;;; motion.el --- simple motion library -*- lexical-binding: t; byte-compile-docstring-max-column: 120; -*-
 ;; Copyright (C) 2024 derui
 
 ;; Author: derui <derutakayu@gmail.com>
 ;; Maintainer: derui <derutakayu@gmail.com>
-;; URL: 
+;; URL: https://github.com/derui/motion
 ;; Version: 0.3.2
 ;; Created: 2024
 ;; Package-Requires: ((emacs "29.1"))
@@ -224,3 +224,4 @@ a buffer is too large.
   )
 
 (provide 'motion)
+;;; motion.el ends here
